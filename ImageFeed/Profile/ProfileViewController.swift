@@ -2,7 +2,7 @@
 //  Untitled.swift
 //  ImageFeed
 //
-//  Created by Сергей Бушков on 07.03.2026.
+//  Created by Сергей Бушков on 07.03.2026. //////
 //
 
 import UIKit
@@ -14,7 +14,7 @@ final class ProfileViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+              
         let profileImage = UIImage(named: "avatar")
         let imageView = UIImageView(image: profileImage)
         imageView.contentMode = .scaleAspectFill
