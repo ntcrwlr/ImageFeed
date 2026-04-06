@@ -8,17 +8,23 @@
 import UIKit
 
 final class AuthViewController: UIViewController {
+    // MARK: - Properties
+
     private let showWebViewSegueIdentifier = "ShowWebView"
     private let oauth2Service = OAuth2Service.shared
     
     weak var delegate: AuthViewControllerDelegate?
     
+    // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureBackButton()
     }
     
+    // MARK: - Private Methods
+
     private func configureBackButton() {
         navigationController?.navigationBar.backIndicatorImage = UIImage(named: "nav_back_button")
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = UIImage(named: "nav_back_button")
@@ -26,6 +32,8 @@ final class AuthViewController: UIViewController {
         navigationItem.backBarButtonItem?.tintColor = UIColor(named: "YP Black")
     }
     
+    // MARK: - Navigation
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == showWebViewSegueIdentifier {
             guard
@@ -41,6 +49,8 @@ final class AuthViewController: UIViewController {
     }
     
 }
+
+// MARK: - WebViewViewControllerDelegate
 
 extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
@@ -63,6 +73,8 @@ extension AuthViewController: WebViewViewControllerDelegate {
         vc.navigationController?.popViewController(animated: true)
     }
 }
+
+// MARK: - OAuth
 
 extension AuthViewController {
     private func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {

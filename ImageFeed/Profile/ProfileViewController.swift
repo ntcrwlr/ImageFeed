@@ -54,8 +54,13 @@ final class ProfileViewController: UIViewController {
         label3.topAnchor.constraint(equalTo: label2.bottomAnchor, constant: 8).isActive = true
         self.label = label3
         
+        guard let logoutImage = UIImage(systemName: "ipad.and.arrow.forward") else {
+            print("❌ Failed to create system image: ipad.and.arrow.forward")
+            return
+        }
+        
         let button = UIButton.systemButton(
-            with: UIImage(systemName: "ipad.and.arrow.forward")!,
+            with: logoutImage,
             target: self,
             action: #selector(Self.didTapButton)
         )

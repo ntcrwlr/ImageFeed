@@ -28,6 +28,7 @@ final class WebViewViewController: UIViewController {
     
     private func loadAuthView() {
         guard var urlComponents = URLComponents(string: WebViewConstants.unsplashAuthorizeURLString) else {
+            print("❌ WebViewViewController: failed to create URLComponents from \(WebViewConstants.unsplashAuthorizeURLString)")
             return
         }
         
@@ -39,6 +40,7 @@ final class WebViewViewController: UIViewController {
         ]
         
         guard let url = urlComponents.url else {
+            print("❌ WebViewViewController: failed to get URL from URLComponents: \(urlComponents)")
             return
         }
         let request = URLRequest(url: url)
@@ -89,25 +91,26 @@ extension WebViewViewController: WKNavigationDelegate {
         decidePolicyFor navigationAction: WKNavigationAction,
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
-        if let code = code(from: navigationAction) { 
-            delegate?.webViewViewController(self, didAuthenticateWithCode: code)
-            decisionHandler(.cancel)
-        } else {
+        guard let code = code(from: navigationAction) else {
             decisionHandler(.allow)
+            return
         }
+        
+        delegate?.webViewViewController(self, didAuthenticateWithCode: code)
+        decisionHandler(.cancel)
     }
     
     private func code(from navigationAction: WKNavigationAction) -> String? {
-        if
+        guard
             let url = navigationAction.request.url,
             let urlComponents = URLComponents(string: url.absoluteString),
             urlComponents.path == "/oauth/authorize/native",
             let items = urlComponents.queryItems,
             let codeItem = items.first(where: { $0.name == "code" })
-        {
-            return codeItem.value
-        } else {
+        else {
             return nil
         }
+        
+        return codeItem.value
     }
 }

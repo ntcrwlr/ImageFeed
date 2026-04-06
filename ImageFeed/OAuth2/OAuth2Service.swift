@@ -7,11 +7,26 @@
 
 import Foundation
 
+enum OAuth2ServiceError: Error {
+    case invalidRequest
+}
+
 final class OAuth2Service {
-    static let shared = OAuth2Service()
     
+    // MARK: - Singleton
+    
+    static let shared = OAuth2Service()
+    private init() {}
+    
+    // MARK: - Private Properties
+    
+    private let tokenStorage = OAuth2TokenStorage()
+    
+    // MARK: - Private Methods
+
     private func makeOAuthTokenRequest(code: String) -> URLRequest? {
         guard var urlComponents = URLComponents(string: "https://unsplash.com/oauth/token") else {
+            print("❌ OAuth2Service: failed to create URLComponents for token endpoint")
             return nil
         }
         
@@ -24,6 +39,7 @@ final class OAuth2Service {
         ]
         
         guard let authTokenUrl = urlComponents.url else {
+            print("❌ OAuth2Service: failed to get URL from URLComponents: \(urlComponents)")
             return nil
         }
         
@@ -31,12 +47,15 @@ final class OAuth2Service {
         request.httpMethod = "POST"
         return request
     }
+
+    // MARK: - Public Methods
     
     func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void
     ) {
         guard let request = makeOAuthTokenRequest(code: code) else {
+            print("❌ OAuth2Service: failed to build URLRequest for code: \(code)")
             DispatchQueue.main.async {
-                completion(.failure(NSError(domain: "OAuth2Service", code: -1)))
+                completion(.failure(OAuth2ServiceError.invalidRequest))
             }
             return
         }
@@ -49,9 +68,9 @@ final class OAuth2Service {
                     let decoder = JSONDecoder()
                     let responseBody = try decoder.decode(OAuthTokenResponseBody.self, from: data)
                     let token = responseBody.accessToken
-                    let tokenStorage = OAuth2TokenStorage()
-                    tokenStorage.token = token
-                    
+
+                    self.tokenStorage.token = token
+
                     DispatchQueue.main.async {
                         completion(.success(token))
                     }
@@ -72,14 +91,6 @@ final class OAuth2Service {
         }
         
         task.resume()
-    }
-}
-
-struct OAuthTokenResponseBody: Decodable {
-    let accessToken: String
-    
-    private enum CodingKeys: String, CodingKey {
-        case accessToken = "access_token"
     }
 }
 
