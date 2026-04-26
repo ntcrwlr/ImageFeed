@@ -10,7 +10,10 @@ import ProgressHUD
 
 final class UIBlockingProgressHUD {
     private static var window: UIWindow? {
-        return UIApplication.shared.windows.first
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }
+        return scene?.windows.first(where: { $0.isKeyWindow }) ?? scene?.windows.first
     }
     
     static func show() {

@@ -54,7 +54,7 @@ final class ProfileService {
                 
                 switch result {
                 case .failure(let error):
-                    print("[ProfileService.fetchProfile]: Failure - \(error.localizedDescription), token: \(token)")
+                    print("[ProfileService.fetchProfile]: Failure - \(error.localizedDescription)")
                     completion(.failure(error))
                 
                 case .success(let result):

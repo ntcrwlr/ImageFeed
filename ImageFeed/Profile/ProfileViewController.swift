@@ -10,20 +10,16 @@ import Kingfisher
 
 final class ProfileViewController: UIViewController {
     @objc private func didTapButton() {}
-    
-    private var label: UILabel?
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-              
-        let profileImage = UIImage(named: "avatar")
-        let imageView = UIImageView(image: profileImage)
+    private let profileService = ProfileService.shared
+    private var profileImageServiceObserver: NSObjectProtocol?
+    private let profileImageView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "avatar"))
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
-
+    
     
     private let nameLabel: UILabel = {
         let label = UILabel()
@@ -66,7 +62,7 @@ final class ProfileViewController: UIViewController {
             }
         updateAvatar()
     }
-
+    
     private func setupUI() {
         view.addSubview(profileImageView)
         profileImageView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
@@ -115,7 +111,7 @@ final class ProfileViewController: UIViewController {
             let profileImageURL = ProfileImageService.shared.avatarURL,
             let imageUrl = URL(string: profileImageURL)
         else { return }
-
+        
         print("imageUrl: \(imageUrl)")
         
         let placeholderImage = UIImage(systemName: "person.circle.fill")?
@@ -143,5 +139,4 @@ final class ProfileViewController: UIViewController {
                 }
             }
     }
-    
 }
