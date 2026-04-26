@@ -31,7 +31,7 @@ final class ProfileViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(label)
         label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
-        label.textColor = .ypWhiteIOS
+        label.textColor = .ypWhite
         label.leadingAnchor.constraint(equalTo: imageView.leadingAnchor).isActive = true
         label.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8).isActive = true
         self.label = label
@@ -40,7 +40,7 @@ final class ProfileViewController: UIViewController {
         label2.text = "@ekaterina_nov"
         label2.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(label2)
-        label2.textColor = .ypGrayIOS
+        label2.textColor = .ypGray
         label2.leadingAnchor.constraint(equalTo: label.leadingAnchor).isActive = true
         label2.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 8).isActive = true
         self.label = label2
@@ -49,17 +49,22 @@ final class ProfileViewController: UIViewController {
         label3.text = "Hello, world!"
         label3.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(label3)
-        label3.textColor = .ypWhiteIOS
+        label3.textColor = .ypWhite
         label3.leadingAnchor.constraint(equalTo: label2.leadingAnchor).isActive = true
         label3.topAnchor.constraint(equalTo: label2.bottomAnchor, constant: 8).isActive = true
         self.label = label3
         
+        guard let logoutImage = UIImage(systemName: "ipad.and.arrow.forward") else {
+            print("❌ Failed to create system image: ipad.and.arrow.forward")
+            return
+        }
+        
         let button = UIButton.systemButton(
-            with: UIImage(systemName: "ipad.and.arrow.forward")!,
+            with: logoutImage,
             target: self,
             action: #selector(Self.didTapButton)
         )
-        button.tintColor = .ypRedIOS
+        button.tintColor = .ypRed
         button.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(button)
         button.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24).isActive = true
