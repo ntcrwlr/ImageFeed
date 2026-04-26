@@ -9,12 +9,23 @@ import UIKit
 
 final class SplashViewController: UIViewController {
     
-    private let showAuthenticationScreenSegueIdentifier = "ShowAuthenticationScreen"
+    private let authViewControllerStoryboardIdentifier = "AuthViewController"
     private let tabBarStoryboardIdentifier = "TabBarViewController"
     private let minimumSplashDuration: TimeInterval = 0
-    
-    private let storage = OAuth2TokenStorage()
+    private let profileService = ProfileService.shared
+    private let storage = OAuth2TokenStorage.shared
     private var routingWorkItem: DispatchWorkItem?
+    private let logoImageView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "Vector"))
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -37,11 +48,38 @@ final class SplashViewController: UIViewController {
     }
     
     private func routeAccordingToAuthState() {
-        if storage.token != nil {
-            switchToGallery()
+        if let token = storage.token {
+            fetchProfile(token: token)
         } else {
-            performSegue(withIdentifier: showAuthenticationScreenSegueIdentifier, sender: nil)
+            showAuthViewController()
         }
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = .ypBlack
+        view.addSubview(logoImageView)
+        
+        NSLayoutConstraint.activate([
+            logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            logoImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            logoImageView.widthAnchor.constraint(equalToConstant: 75),
+            logoImageView.heightAnchor.constraint(equalToConstant: 77)
+        ])
+    }
+    
+    private func showAuthViewController() {
+        let storyboard = UIStoryboard(name: "Main", bundle: .main)
+        guard let authViewController = storyboard.instantiateViewController(
+            withIdentifier: authViewControllerStoryboardIdentifier
+        ) as? AuthViewController else {
+            assertionFailure("Failed to instantiate AuthViewController")
+            return
+        }
+        
+        authViewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: authViewController)
+        navigationController.modalPresentationStyle = .fullScreen
+        present(navigationController, animated: true)
     }
     
     private func switchToGallery() {
@@ -75,25 +113,44 @@ final class SplashViewController: UIViewController {
     }
 }
 
-extension SplashViewController {
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == showAuthenticationScreenSegueIdentifier {
-            guard
-                let navigationController = segue.destination as? UINavigationController,
-                let authViewController = navigationController.viewControllers.first as? AuthViewController
-            else {
-                assertionFailure("Failed to prepare for \(showAuthenticationScreenSegueIdentifier)")
-                return
-            }
-            authViewController.delegate = self
-        } else {
-            super.prepare(for: segue, sender: sender)
-        }
-    }
-}
-
 extension SplashViewController: AuthViewControllerDelegate {
     func didAuthenticate(_ vc: AuthViewController) {
-        switchToGallery()
+        vc.dismiss(animated: true)
+        
+        guard let token = storage.token else {
+            return
+        }
+        fetchProfile(token: token)
+    }
+    
+    private func fetchProfile(token: String) {
+        UIBlockingProgressHUD.show()
+        profileService.fetchProfile(token) { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
+            
+            guard let self = self else { return }
+            
+            switch result {
+            case .success(let profile):
+                ProfileImageService.shared.fetchProfileImageURL(username: profile.username) { _ in }
+                self.switchToGallery()
+                
+            case .failure:
+                self.showProfileLoadingError(token: token)
+            }
+        }
+    }
+    
+    private func showProfileLoadingError(token: String) {
+        let alert = UIAlertController(
+            title: "Что-то пошло не так",
+            message: "Не удалось загрузить профиль",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            self?.fetchProfile(token: token)
+        })
+        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel))
+        present(alert, animated: true)
     }
 }
