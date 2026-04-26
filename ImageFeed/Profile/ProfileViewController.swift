@@ -2,7 +2,7 @@
 //  Untitled.swift
 //  ImageFeed
 //
-//  Created by Сергей Бушков on 07.03.2026.
+//  Created by Сергей Бушков on 07.03.2026. //////
 //
 
 import UIKit
@@ -10,10 +10,14 @@ import Kingfisher
 
 final class ProfileViewController: UIViewController {
     @objc private func didTapButton() {}
-    private let profileService = ProfileService.shared
-    private var profileImageServiceObserver: NSObjectProtocol?
-    private let profileImageView: UIImageView = {
-        let imageView = UIImageView(image: UIImage(named: "avatar"))
+    
+    private var label: UILabel?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+              
+        let profileImage = UIImage(named: "avatar")
+        let imageView = UIImageView(image: profileImage)
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
