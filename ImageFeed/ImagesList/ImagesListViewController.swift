@@ -9,6 +9,9 @@ import UIKit
 
 final class ImagesListViewController: UIViewController {
     @IBOutlet private var tableView: UITableView!
+    
+    private let imagesListService = ImagesListService.shared
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0)
@@ -57,6 +60,16 @@ extension ImagesListViewController: UITableViewDelegate {
         let scale = imageViewWidth / imageWidth
         let cellHeight = image.size.height * scale + imageInsets.top + imageInsets.bottom
         return cellHeight
+    }
+    
+    func tableView(
+        _ tableView: UITableView,
+        willDisplay cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
+    ) {
+        if indexPath.row + 1 == photosName.count {
+            imagesListService.fetchPhotosNextPage()
+        }
     }
     
 }
