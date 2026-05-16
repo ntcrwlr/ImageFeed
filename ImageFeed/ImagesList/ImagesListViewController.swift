@@ -29,6 +29,7 @@ final class ImagesListViewController: UIViewController {
         }
         imagesListService.fetchPhotosNextPage()
     }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == showSingleImageSegueIdentifier {
                 guard
