@@ -104,7 +104,6 @@ extension ImagesListViewController: UITableViewDelegate {
             imagesListService.fetchPhotosNextPage()
         }
     }
-    
 }
 
 extension ImagesListViewController: UITableViewDataSource {
