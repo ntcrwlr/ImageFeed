@@ -29,6 +29,7 @@ struct PhotoResult: Decodable {
 
 struct UrlsResult: Decodable {
     let thumb: String
+    let regular: String
     let full: String
 }
 
@@ -38,6 +39,7 @@ struct Photo {
     let createdAt: Date?
     let welcomeDescription: String?
     let thumbImageURL: String
+    let regularImageURL: String
     let largeImageURL: String
     let isLiked: Bool
 }
@@ -50,6 +52,7 @@ final class ImagesListService {
     
     private let urlSession = URLSession.shared
     private var task: URLSessionTask?
+    private var changeLikeTask: URLSessionTask?
     private var lastLoadedPage: Int?
     
     private init() {}
@@ -93,6 +96,65 @@ final class ImagesListService {
         task.resume()
     }
     
+    func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
+        assert(Thread.isMainThread)
+        
+        changeLikeTask?.cancel()
+        
+        guard let token = OAuth2TokenStorage.shared.token else {
+            let error = NetworkError.invalidRequest
+            print("[ImagesListService.changeLike]: Failure - authorization token missing, photoId: \(photoId), isLike: \(isLike)")
+            completion(.failure(error))
+            return
+        }
+        
+        guard let request = makeChangeLikeRequest(photoId: photoId, isLike: isLike, token: token) else {
+            let error = NetworkError.invalidRequest
+            print("[ImagesListService.changeLike]: Failure - invalidRequest, photoId: \(photoId), isLike: \(isLike)")
+            completion(.failure(error))
+            return
+        }
+        
+        let task = urlSession.data(for: request) { [weak self] result in
+            guard let self else { return }
+            defer { self.changeLikeTask = nil }
+            
+            switch result {
+            case .success:
+                if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
+                    let photo = self.photos[index]
+                    self.photos[index] = Photo(
+                        id: photo.id,
+                        size: photo.size,
+                        createdAt: photo.createdAt,
+                        welcomeDescription: photo.welcomeDescription,
+                        thumbImageURL: photo.thumbImageURL,
+                        regularImageURL: photo.regularImageURL,
+                        largeImageURL: photo.largeImageURL,
+                        isLiked: isLike
+                    )
+                }
+                completion(.success(()))
+                
+            case .failure(let error):
+                print("[ImagesListService.changeLike]: Failure - \(error.localizedDescription), photoId: \(photoId), isLike: \(isLike)")
+                completion(.failure(error))
+            }
+        }
+        
+        changeLikeTask = task
+        task.resume()
+    }
+    
+    func clean() {
+        task?.cancel()
+        changeLikeTask?.cancel()
+        task = nil
+        changeLikeTask = nil
+        photos = []
+        lastLoadedPage = nil
+    }
+    
     private func makePhotosRequest(page: Int, token: String) -> URLRequest? {
         guard var urlComponents = URLComponents(string: "\(Constants.defaultBaseURLString)/photos") else {
             return nil
@@ -112,6 +174,18 @@ final class ImagesListService {
         request.setValue("v1", forHTTPHeaderField: "Accept-Version")
         return request
     }
+    
+    private func makeChangeLikeRequest(photoId: String, isLike: Bool, token: String) -> URLRequest? {
+        guard let url = URL(string: "\(Constants.defaultBaseURLString)/photos/\(photoId)/like") else {
+            return nil
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = isLike ? "POST" : "DELETE"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("v1", forHTTPHeaderField: "Accept-Version")
+        return request
+    }
 }
 
 private extension Photo {
@@ -122,6 +196,7 @@ private extension Photo {
             createdAt: ISO8601DateFormatter.unsplashDateFormatter.date(from: photoResult.createdAt ?? ""),
             welcomeDescription: photoResult.description,
             thumbImageURL: photoResult.urls.thumb,
+            regularImageURL: photoResult.urls.regular,
             largeImageURL: photoResult.urls.full,
             isLiked: photoResult.likedByUser
         )
