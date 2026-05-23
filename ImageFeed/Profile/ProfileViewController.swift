@@ -9,7 +9,25 @@ import UIKit
 import Kingfisher
 
 final class ProfileViewController: UIViewController {
-    @objc private func didTapButton() {}
+    @objc private func didTapButton() {
+        let alert = UIAlertController(
+            title: "Пока, пока!",
+            message: "Уверены, что хотите выйти?",
+            preferredStyle: .alert
+        )
+
+        let yesAction = UIAlertAction(title: "Да", style: .destructive) { _ in
+            ProfileLogoutService.shared.logout()
+            self.switchToSplashViewController()
+        }
+
+        let noAction = UIAlertAction(title: "Нет", style: .cancel)
+
+        alert.addAction(yesAction)
+        alert.addAction(noAction)
+
+        present(alert, animated: true)
+    }
     private let profileService = ProfileService.shared
     private var profileImageServiceObserver: NSObjectProtocol?
     private let profileImageView: UIImageView = {
@@ -135,8 +153,20 @@ final class ProfileViewController: UIViewController {
                     print(value.cacheType)
                     print(value.source)
                 case .failure(let error):
-                    print(error)
+                    print("[ProfileViewController.updateAvatar]: network error \(error)")
                 }
             }
+    }
+    
+    private func switchToSplashViewController() {
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive })?
+            .windows.first(where: { $0.isKeyWindow }) else {
+            return
+        }
+        
+        window.rootViewController = SplashViewController()
+        window.makeKeyAndVisible()
     }
 }
