@@ -168,7 +168,7 @@ extension ImagesListViewController: ImagesListCellDelegate {
                 cell.setLikeButtonEnabled(true)
                 switch result {
                 case .success:
-                    guard let self = self else { return }
+                    guard let self else { return }
                     let oldPhoto = self.photos[indexPath.row]
                     let updatedPhoto = Photo(
                         id: oldPhoto.id,

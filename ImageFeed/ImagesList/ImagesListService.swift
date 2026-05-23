@@ -17,12 +17,8 @@ struct PhotoResult: Decodable {
     let likedByUser: Bool
     
     private enum CodingKeys: String, CodingKey {
-        case id
-        case width
-        case height
+        case id, width, height, description, urls
         case createdAt = "created_at"
-        case description
-        case urls
         case likedByUser = "liked_by_user"
     }
 }
