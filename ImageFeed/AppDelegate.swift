@@ -11,8 +11,6 @@ import ProgressHUD
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         ProgressHUD.animationType = .circleStrokeSpin
         ProgressHUD.colorHUD = .white
