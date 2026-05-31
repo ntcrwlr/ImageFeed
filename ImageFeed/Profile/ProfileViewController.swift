@@ -17,8 +17,7 @@ final class ProfileViewController: UIViewController {
         )
 
         let yesAction = UIAlertAction(title: "Да", style: .destructive) { _ in
-            ProfileLogoutService.shared.logout()
-            self.switchToSplashViewController()
+            self.presenter?.didTapLogoutButton()
         }
 
         let noAction = UIAlertAction(title: "Нет", style: .cancel)
@@ -28,7 +27,7 @@ final class ProfileViewController: UIViewController {
 
         present(alert, animated: true)
     }
-    private let profileService = ProfileService.shared
+    private var presenter: ProfilePresenterProtocol?
     private var profileImageServiceObserver: NSObjectProtocol?
     private let profileImageView: UIImageView = {
         let imageView = UIImageView(image: UIImage(named: "avatar"))
@@ -61,14 +60,19 @@ final class ProfileViewController: UIViewController {
         label.numberOfLines = 0
         return label
     }()
+
+    func configure(_ presenter: ProfilePresenterProtocol) {
+        self.presenter = presenter
+        presenter.view = self
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        if presenter == nil {
+            configure(ProfilePresenter())
+        }
         view.backgroundColor = .ypBlack
         setupUI()
-        if let profile = profileService.profile {
-            updateProfileDetails(profile: profile)
-        }
         
         profileImageServiceObserver = NotificationCenter.default
             .addObserver(
@@ -76,9 +80,9 @@ final class ProfileViewController: UIViewController {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.updateAvatar()
+                self?.presenter?.didUpdateAvatar()
             }
-        updateAvatar()
+        presenter?.viewDidLoad()
     }
     
     private func setupUI() {
@@ -111,6 +115,7 @@ final class ProfileViewController: UIViewController {
             target: self,
             action: #selector(Self.didTapButton)
         )
+        button.accessibilityIdentifier = "logout button"
         button.tintColor = .ypRed
         button.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(button)
@@ -118,15 +123,15 @@ final class ProfileViewController: UIViewController {
         button.centerYAnchor.constraint(equalTo: profileImageView.centerYAnchor).isActive = true
     }
     
-    private func updateProfileDetails(profile: Profile) {
+    func updateProfileDetails(profile: Profile) {
         nameLabel.text = profile.name
         loginNameLabel.text = profile.loginName
         descriptionLabel.text = profile.bio
     }
     
-    private func updateAvatar() {
+    func updateAvatar(url profileImageURL: String?) {
         guard
-            let profileImageURL = ProfileImageService.shared.avatarURL,
+            let profileImageURL,
             let imageUrl = URL(string: profileImageURL)
         else { return }
         
@@ -158,7 +163,7 @@ final class ProfileViewController: UIViewController {
             }
     }
     
-    private func switchToSplashViewController() {
+    func switchToSplashViewController() {
         guard let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .first(where: { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive })?
@@ -170,3 +175,5 @@ final class ProfileViewController: UIViewController {
         window.makeKeyAndVisible()
     }
 }
+
+extension ProfileViewController: ProfileViewControllerProtocol {}
